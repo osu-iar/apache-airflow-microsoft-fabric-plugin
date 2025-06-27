@@ -7,6 +7,7 @@ from typing import AsyncIterator
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from apache_airflow_microsoft_fabric_plugin.hooks.fabric import FabricAsyncHook, FabricRunItemStatus
 
+
 class FabricTrigger(BaseTrigger):
     """Trigger when a Fabric item run finishes."""
 
@@ -58,17 +59,7 @@ class FabricTrigger(BaseTrigger):
                     workspace_id=self.workspace_id,
                     item_id=self.item_id,
                 )
-                # Dict key 'status' is not always present in `item_run_details`,
-                # so setting a default helps avoid KeyError whose handler
-                # triggers task Cancellation.
-                #
-                # Without a default, the error logged takes this form (see
-                # exception handlers further down):
-                #
-                # {fabric.py:100} INFO - Unexpected error 'status' caught. Cancel pipeline run ...
-                item_run_status = item_run_details.get("status", 'Unknown')
-                self.log.debug("item_run_status has value %s", item_run_status)
-
+                item_run_status = item_run_details["status"]
                 if item_run_status == FabricRunItemStatus.COMPLETED:
                     yield TriggerEvent(
                         {
