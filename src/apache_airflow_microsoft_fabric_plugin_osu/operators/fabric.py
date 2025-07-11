@@ -23,12 +23,12 @@ from typing import TYPE_CHECKING, Sequence
 
 from airflow.configuration import conf
 from airflow.models import BaseOperator, BaseOperatorLink, XCom
-from apache_airflow_microsoft_fabric_plugin.hooks.fabric import (
+from apache_airflow_microsoft_fabric_plugin_osu.hooks.fabric import (
     FabricHook,
     FabricRunItemException,
     FabricRunItemStatus,
 )
-from apache_airflow_microsoft_fabric_plugin.triggers.fabric import FabricTrigger
+from apache_airflow_microsoft_fabric_plugin_osu.triggers.fabric import FabricTrigger
 from airflow.utils.decorators import apply_defaults
 
 if TYPE_CHECKING:
@@ -123,6 +123,7 @@ class FabricRunItemOperator(BaseOperator):
 
     def execute(self, context: Context) -> None:
         # Execute the item run
+        self.log.warning("Using **FORKED**, non-Microsoft FabricRunItemOperator")
         self.location = self.hook.run_fabric_item(
             workspace_id=self.workspace_id, item_id=self.item_id, job_type=self.job_type, job_params=self.job_params
         )

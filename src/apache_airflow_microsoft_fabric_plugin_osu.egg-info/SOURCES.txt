@@ -1,0 +1,14 @@
+LICENSE
+README.md
+pyproject.toml
+src/apache_airflow_microsoft_fabric_plugin_osu/__init__.py
+src/apache_airflow_microsoft_fabric_plugin_osu.egg-info/PKG-INFO
+src/apache_airflow_microsoft_fabric_plugin_osu.egg-info/SOURCES.txt
+src/apache_airflow_microsoft_fabric_plugin_osu.egg-info/dependency_links.txt
+src/apache_airflow_microsoft_fabric_plugin_osu.egg-info/top_level.txt
+src/apache_airflow_microsoft_fabric_plugin_osu/hooks/__init__.py
+src/apache_airflow_microsoft_fabric_plugin_osu/hooks/fabric.py
+src/apache_airflow_microsoft_fabric_plugin_osu/operators/__init__.py
+src/apache_airflow_microsoft_fabric_plugin_osu/operators/fabric.py
+src/apache_airflow_microsoft_fabric_plugin_osu/triggers/__init__.py
+src/apache_airflow_microsoft_fabric_plugin_osu/triggers/fabric.py
