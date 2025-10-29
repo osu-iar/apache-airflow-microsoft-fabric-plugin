@@ -65,8 +65,12 @@ class FabricHook(BaseHook):
         from wtforms import StringField
 
         return {
-            "tenantId": StringField(lazy_gettext("Tenant ID"), widget=BS3TextFieldWidget()),
-            "clientId": StringField(lazy_gettext("Client ID"), widget=BS3TextFieldWidget()),
+            "tenantId": StringField(
+                lazy_gettext("Tenant ID"), widget=BS3TextFieldWidget()
+            ),
+            "clientId": StringField(
+                lazy_gettext("Client ID"), widget=BS3TextFieldWidget()
+            ),
         }
 
     @classmethod
@@ -85,14 +89,17 @@ class FabricHook(BaseHook):
         *,
         fabric_conn_id: str = default_conn_name,
         max_retries: int = 5,
-        retry_delay: int = 1
+        retry_delay: int = 1,
     ):
         self.conn_id = fabric_conn_id
         self._api_version = "v1"
         self._base_url = "https://api.fabric.microsoft.com"
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-        self.cached_access_token: dict[str, str | None | int] = {"access_token": None, "expiry_time": 0}
+        self.cached_access_token: dict[str, str | None | int] = {
+            "access_token": None,
+            "expiry_time": 0,
+        }
         super().__init__()
 
     def _get_token(self) -> str:
@@ -174,7 +181,7 @@ class FabricHook(BaseHook):
 
         @retry(
             stop=stop_after_attempt(self.max_retries),
-            wait=wait_exponential(multiplier=1, min=self.retry_delay, max=10)
+            wait=wait_exponential(multiplier=1, min=self.retry_delay, max=10),
         )
         def _internal_get_item_run_details():
             headers = self.get_headers()
@@ -183,7 +190,9 @@ class FabricHook(BaseHook):
 
             item_run_details = response.json()
             item_failure_reason = item_run_details.get("failureReason", dict())
-            if item_failure_reason is not None and item_failure_reason.get("errorCode") in ["RequestExecutionFailed", "NotFound"]:
+            if item_failure_reason is not None and item_failure_reason.get(
+                "errorCode"
+            ) in ["RequestExecutionFailed", "NotFound"]:
                 raise FabricRunItemException("Unable to get item run details.")
             return item_run_details
 
@@ -206,9 +215,13 @@ class FabricHook(BaseHook):
         if response.ok:
             return response.json()
 
-        raise AirflowException(f"Failed to get item details for item {item_id} in workspace {workspace_id}.")
+        raise AirflowException(
+            f"Failed to get item details for item {item_id} in workspace {workspace_id}."
+        )
 
-    def run_fabric_item(self, workspace_id: str, item_id: str, job_type: str, job_params: dict | None) -> str:
+    def run_fabric_item(
+        self, workspace_id: str, item_id: str, job_type: str, job_params: dict | None
+    ) -> str:
         """
         Run a Fabric item.
 
@@ -230,7 +243,9 @@ class FabricHook(BaseHook):
 
         location_header = response.headers.get("Location")
         if location_header is None:
-            raise AirflowException("Location header not found in run on demand item response.")
+            raise AirflowException(
+                "Location header not found in run on demand item response."
+            )
 
         return location_header
 
@@ -259,7 +274,11 @@ class FabricHook(BaseHook):
             item_run_status = item_run_details["status"]
             if item_run_status in FabricRunItemStatus.TERMINAL_STATUSES:
                 return item_run_status == target_status
-            self.log.info("Sleeping for %s. The pipeline state is %s.", check_interval, item_run_status)
+            self.log.info(
+                "Sleeping for %s. The pipeline state is %s.",
+                check_interval,
+                item_run_status,
+            )
             time.sleep(check_interval)
         raise FabricRunItemException(
             f"Item run did not reach the target status {target_status} within the {timeout} seconds."
@@ -319,16 +338,18 @@ class FabricAsyncHook(FabricHook):
             try:
                 response = await request_func(url, **kwargs)
 
-                content_type = response.headers.get('Content-Type', '').lower()
-                if 'application/json' in content_type:
+                content_type = response.headers.get("Content-Type", "").lower()
+                if "application/json" in content_type:
                     return await response.json()
-                elif 'application/octet-stream' in content_type:
-                    return response # Returns the raw bytes
+                elif "application/octet-stream" in content_type:
+                    return response  # Returns the raw bytes
                 else:
                     raise AirflowException(f"Unsupported Content-Type: {content_type}")
 
             except aiohttp.ClientResponseError as e:
-                raise AirflowException("Request to %s failed with error %s", (url, str(e)))
+                raise AirflowException(
+                    "Request to %s failed with error %s", (url, str(e))
+                )
 
     async def _async_get_token(self) -> str:
         """
@@ -339,7 +360,11 @@ class FabricAsyncHook(FabricHook):
         cached_token = self.cached_access_token.get("access_token")
         expiry_time = self.cached_access_token.get("expiry_time")
 
-        if isinstance(cached_token, str) and isinstance(expiry_time, float) and expiry_time > time.time():
+        if (
+            isinstance(cached_token, str)
+            and isinstance(expiry_time, float)
+            and expiry_time > time.time()
+        ):
             return str(cached_token)
 
         connection = await sync_to_async(self.get_connection)(self.conn_id)
@@ -390,7 +415,9 @@ class FabricAsyncHook(FabricHook):
             "Authorization": f"Bearer {access_token}",
         }
 
-    async def async_get_item_run_details(self, workspace_id: str, item_id: str, item_run_id: str) -> None:
+    async def async_get_item_run_details(
+        self, workspace_id: str, item_id: str, item_run_id: str
+    ) -> None:
         """
         Get run details of the item instance.
 

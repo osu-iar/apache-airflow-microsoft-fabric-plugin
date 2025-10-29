@@ -5,7 +5,10 @@ import time
 from typing import AsyncIterator
 
 from airflow.triggers.base import BaseTrigger, TriggerEvent
-from apache_airflow_microsoft_fabric_plugin.hooks.fabric import FabricAsyncHook, FabricRunItemStatus
+from apache_airflow_microsoft_fabric_plugin.hooks.fabric import (
+    FabricAsyncHook,
+    FabricRunItemStatus,
+)
 
 
 class FabricTrigger(BaseTrigger):

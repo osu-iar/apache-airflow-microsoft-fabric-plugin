@@ -66,14 +66,20 @@ def test_get_item_run_details_success(fabric_hook, get_token, mocker):
     response.json.return_value = {"status": "Completed"}
 
     mocker.patch.object(fabric_hook, "_send_request", return_value=response)
-    mocker.patch.object(fabric_hook, "get_headers", return_value={"Authorization": "Bearer access_token"})
+    mocker.patch.object(
+        fabric_hook,
+        "get_headers",
+        return_value={"Authorization": "Bearer access_token"},
+    )
 
     result = fabric_hook.get_item_run_details(location=ITEM_RUN_LOCATION)
 
     assert result == {"status": "Completed"}
     fabric_hook.get_headers.assert_called_once()
     fabric_hook._send_request.assert_called_once_with(
-        "GET", ITEM_RUN_LOCATION, headers={"Authorization": f"Bearer {get_token.return_value}"}
+        "GET",
+        ITEM_RUN_LOCATION,
+        headers={"Authorization": f"Bearer {get_token.return_value}"},
     )
 
 
@@ -84,14 +90,20 @@ def test_get_item_run_details_failure(fabric_hook, get_token, mocker):
     response.raise_for_status.side_effect = requests.exceptions.HTTPError("Error")
 
     mocker.patch.object(fabric_hook, "_send_request", return_value=response)
-    mocker.patch.object(fabric_hook, "get_headers", return_value={"Authorization": "Bearer access_token"})
+    mocker.patch.object(
+        fabric_hook,
+        "get_headers",
+        return_value={"Authorization": "Bearer access_token"},
+    )
 
     with pytest.raises(requests.exceptions.HTTPError):
         fabric_hook.get_item_run_details(location=ITEM_RUN_LOCATION)
 
     fabric_hook.get_headers.assert_called_once()
     fabric_hook._send_request.assert_called_once_with(
-        "GET", ITEM_RUN_LOCATION, headers={"Authorization": f"Bearer {get_token.return_value}"}
+        "GET",
+        ITEM_RUN_LOCATION,
+        headers={"Authorization": f"Bearer {get_token.return_value}"},
     )
 
 
@@ -100,7 +112,9 @@ def test_get_item_details(mock_send_request, fabric_hook, get_token):
     fabric_hook.get_item_details(WORKSPACE_ID, ITEM_ID)
     expected_url = f"{BASE_URL}/{API_VERSION}/workspaces/{WORKSPACE_ID}/items/{ITEM_ID}"
     mock_send_request.assert_called_once_with(
-        "GET", expected_url, headers={"Authorization": f"Bearer {get_token.return_value}"}
+        "GET",
+        expected_url,
+        headers={"Authorization": f"Bearer {get_token.return_value}"},
     )
 
 
@@ -109,16 +123,20 @@ def test_run_fabric_item(mock_send_request, fabric_hook, get_token):
     fabric_hook.run_fabric_item(WORKSPACE_ID, ITEM_ID, JOB_TYPE)
     expected_url = f"{BASE_URL}/{API_VERSION}/workspaces/{WORKSPACE_ID}/items/{ITEM_ID}/jobs/instances?jobType={JOB_TYPE}"
     mock_send_request.assert_called_once_with(
-        "POST", expected_url, headers={"Authorization": f"Bearer {get_token.return_value}"}
+        "POST",
+        expected_url,
+        headers={"Authorization": f"Bearer {get_token.return_value}"},
     )
+
 
 _wait_for_item_run_status_test_args = [
     (FabricRunItemStatus.COMPLETED, FabricRunItemStatus.COMPLETED, True),
     (FabricRunItemStatus.FAILED, FabricRunItemStatus.COMPLETED, False),
     (FabricRunItemStatus.IN_PROGRESS, FabricRunItemStatus.COMPLETED, "timeout"),
     (FabricRunItemStatus.NOT_STARTED, FabricRunItemStatus.COMPLETED, "timeout"),
-    (FabricRunItemStatus.CANCELLED, FabricRunItemStatus.COMPLETED, False)
+    (FabricRunItemStatus.CANCELLED, FabricRunItemStatus.COMPLETED, False),
 ]
+
 
 @pytest.mark.parametrize(
     argnames=("item_run_status", "expected_status", "expected_result"),
@@ -128,9 +146,11 @@ _wait_for_item_run_status_test_args = [
         if isinstance(argval[1], str)
         else f"run_status_{argval[0]}_expected_AnyTerminalStatus"
         for argval in _wait_for_item_run_status_test_args
-    ]
+    ],
 )
-def test_wait_for_item_run_status(fabric_hook, item_run_status, expected_status, expected_result):
+def test_wait_for_item_run_status(
+    fabric_hook, item_run_status, expected_status, expected_result
+):
     config = {
         "location": ITEM_RUN_LOCATION,
         "timeout": 3,
@@ -147,6 +167,7 @@ def test_wait_for_item_run_status(fabric_hook, item_run_status, expected_status,
             with pytest.raises(FabricRunItemException):
                 fabric_hook.wait_for_item_run_status(**config)
 
+
 @patch(f"{MODULE}.FabricHook._send_request")
 def test_send_request(mock_send_request, fabric_hook: FabricHook):
     request_type = "GET"
@@ -154,20 +175,31 @@ def test_send_request(mock_send_request, fabric_hook: FabricHook):
     fabric_hook._send_request(request_type, url)
     mock_send_request.assert_called_once_with(request_type, url)
 
+
 @patch(f"{MODULE}.FabricHook._send_request")
 def test_send_request_with_custom_headers(mock_send_request, get_token, fabric_hook):
     request_type = "GET"
     url = "https://api.fabric.microsoft.com/test"
-    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {get_token.return_value}"}
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {get_token.return_value}",
+    }
     fabric_hook._send_request(request_type, url, headers=headers)
     mock_send_request.assert_called_once_with(
-        request_type, url, headers={"Content-Type": "application/json", "Authorization": "Bearer access_token"}
+        request_type,
+        url,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer access_token",
+        },
     )
+
 
 @pytest.fixture
 def fabric_async_hook():
     client = FabricAsyncHook(fabric_conn_id=DEFAULT_FABRIC_CONNECTION)
     return client
+
 
 @pytest.mark.asyncio
 @mock.patch(f"{MODULE}.FabricAsyncHook._get_token", return_value="access_token")
@@ -186,17 +218,26 @@ async def test_async_get_item_run_details_success(get_token, fabric_async_hook, 
     response.ok = True
     response.json.return_value = {"status": "Completed"}
 
-    mocker.patch.object(fabric_async_hook, "get_headers", return_value={"Authorization": f"Bearer {get_token.return_value}"})
-    mocker.patch.object(fabric_async_hook, "_send_request", return_value=response.json.return_value)
+    mocker.patch.object(
+        fabric_async_hook,
+        "get_headers",
+        return_value={"Authorization": f"Bearer {get_token.return_value}"},
+    )
+    mocker.patch.object(
+        fabric_async_hook, "_send_request", return_value=response.json.return_value
+    )
 
     expected_url = f"{BASE_URL}/{API_VERSION}/workspaces/{WORKSPACE_ID}/items/{ITEM_ID}/jobs/instances/{ITEM_RUN_ID}"
-    result = await fabric_async_hook.get_item_run_details(workspace_id=WORKSPACE_ID, item_id=ITEM_ID, item_run_id=ITEM_RUN_ID)
+    result = await fabric_async_hook.get_item_run_details(
+        workspace_id=WORKSPACE_ID, item_id=ITEM_ID, item_run_id=ITEM_RUN_ID
+    )
 
     assert result == {"status": "Completed"}
     fabric_async_hook.get_headers.assert_called_once()
     fabric_async_hook._send_request.assert_called_once_with(
         "GET", expected_url, headers={"Authorization": "Bearer access_token"}
     )
+
 
 @pytest.mark.asyncio
 @patch(f"{MODULE}.FabricAsyncHook._send_request")

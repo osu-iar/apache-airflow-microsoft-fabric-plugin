@@ -99,7 +99,9 @@ class FabricRunItemOperator(BaseOperator):
         check_interval: int = 60,
         max_retries: int = 5,
         retry_delay: int = 1,
-        deferrable: bool = conf.getboolean("operators", "default_deferrable", fallback=False),
+        deferrable: bool = conf.getboolean(
+            "operators", "default_deferrable", fallback=False
+        ),
         job_params: dict = None,
         **kwargs,
     ) -> None:
@@ -119,12 +121,19 @@ class FabricRunItemOperator(BaseOperator):
     @cached_property
     def hook(self) -> FabricHook:
         """Create and return the FabricHook (cached)."""
-        return FabricHook(fabric_conn_id=self.fabric_conn_id, max_retries=self.max_retries, retry_delay=self.retry_delay)
+        return FabricHook(
+            fabric_conn_id=self.fabric_conn_id,
+            max_retries=self.max_retries,
+            retry_delay=self.retry_delay,
+        )
 
     def execute(self, context: Context) -> None:
         # Execute the item run
         self.location = self.hook.run_fabric_item(
-            workspace_id=self.workspace_id, item_id=self.item_id, job_type=self.job_type, job_params=self.job_params
+            workspace_id=self.workspace_id,
+            item_id=self.item_id,
+            job_type=self.job_type,
+            job_params=self.job_params,
         )
         item_run_details = self.hook.get_item_run_details(self.location)
 
@@ -145,7 +154,9 @@ class FabricRunItemOperator(BaseOperator):
                     check_interval=self.check_interval,
                     timeout=self.timeout,
                 ):
-                    self.log.info("Item run %s has completed successfully.", self.item_run_id)
+                    self.log.info(
+                        "Item run %s has completed successfully.", self.item_run_id
+                    )
                 else:
                     raise FabricRunItemException(
                         f"Item run {self.item_run_id} has failed with status {self.item_run_status}."
@@ -154,7 +165,9 @@ class FabricRunItemOperator(BaseOperator):
                 end_time = time.monotonic() + self.timeout
 
                 if self.item_run_status not in FabricRunItemStatus.TERMINAL_STATUSES:
-                    self.log.info("Deferring the task to wait for item run to complete.")
+                    self.log.info(
+                        "Deferring the task to wait for item run to complete."
+                    )
 
                     self.defer(
                         trigger=FabricTrigger(
@@ -170,7 +183,9 @@ class FabricRunItemOperator(BaseOperator):
                         method_name="execute_complete",
                     )
                 elif self.item_run_status == FabricRunItemStatus.COMPLETED:
-                    self.log.info("Item run %s has completed successfully.", self.item_run_id)
+                    self.log.info(
+                        "Item run %s has completed successfully.", self.item_run_id
+                    )
                 elif self.item_run_status in FabricRunItemStatus.FAILURE_STATES:
                     raise FabricRunItemException(
                         f"Item run {self.item_run_id} has failed with status {self.item_run_status}."
